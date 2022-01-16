@@ -1,0 +1,117 @@
+
+<?php
+session_start();
+
+include("../phpclass.inc.php");
+$obj = new PHPClass();
+
+$obj->isLoginSessionExpired();//check if session is expired
+
+if(isset($_SESSION["user_id"])) {
+	if($obj->isLoginSessionExpired()) {
+		header("Location:../logout.php?session_expired=1");
+	}
+}
+if(isset($_SESSION['user_name'])) {
+	$id = $_GET['id'];
+	$editCampaign = $obj->retrieveEditCampaign($id); //retrieve the edited campaign
+	$row = mysqli_fetch_assoc($editCampaign);
+?>
+<html>
+
+	<head>
+		<title>Edit Campaign</title>
+		<meta name = "viewport" content = "width=device-width,initial-scale=1">
+		<link rel  = "stylesheet" href = "../css/bootstrap.min.css">
+		<style>
+			.form-width{
+				width:200px;
+			}
+			.container-width{
+				width:300px;
+			}
+		</style>
+	</head>
+
+	<body>
+	
+		<div class = "container">
+			<div class = "row">
+				<div class = "col-md-6 col-md-offset-3">
+					<div class="panel panel-default" style = "margin-top:30px;"> 
+						<?php include("panel-heading.php");?>
+						<form method = "POST" action = "editcampaignpreview.php" enctype = "multipart/form-data">
+						<div class="panel-body"> 
+							<div class = "form-group"><label>Campaign name</label>
+								<input type = "text" name = "cname" class = "form-control"
+								 value = "<?php echo $row['cname'];?>">
+							</div>
+							<div class = "form-group"><label>Date from</label>
+								<input type = "date" name = "date1" class = "form-width form-control" required>
+							</div>		
+							<div class = "form-group"><label>Date to</label>
+								<input type = "date" name = "date2" class = "form-width form-control" required>
+							</div>		
+							<div class = "form-group"><label>Total Budget</label>
+								<input type = "text" name = "tbudget" value = "<?php echo $row['tbudget'];?>" class = "form-width form-control">
+							</div>		
+							<div class = "form-group"><label>Daily Budget</label>
+								<input type = "text" name = "dbudget" value = "<?php echo $row['dbudget'];?>"  class = "form-width form-control">
+							</div>	
+							<div class = "form-group"><label>Campaign Photo|Campaign Photos</label>
+								<input type = "file" name = "img[]" multiple class = "btn btn-info">
+							</div>	
+							<?php
+								$sql = "SELECT * FROM createcampaign  WHERE id = '".$id."'";
+								$res = mysqli_query($obj->conndb(),$sql);
+								$row = mysqli_fetch_assoc($res);					
+					
+							foreach($row as $k=>$v){
+								if($k == "image"){
+									$del = "/";
+									$img = "";
+									$token = strtok($v,$del);
+									while($token!==false){
+										?><img class = "thumbnail" src = "images/<?php echo $token;?>" 
+										style = "width:100px;height:100px;display:inline;"><?php
+										#echo $token."<br>";
+										$img .=$token."/";
+										$token = strtok($del);
+									}
+									?><input type = "hidden" name = "img" value = "<?php echo $img;?>"><?php
+									?><input type = "hidden" name = "user" value = "<?php echo $user;?>"><?php
+									?><input type = "hidden" name = "id" value = "<?php echo $id;?>"><?php
+									
+								}
+							}
+							
+							
+							?>
+							
+							<div class = "form-group">
+								<input type = "submit" name = "preview" value = "preview"
+								 class = "btn btn-default"  data-toggle="modal" data-target="#myModal">
+								<input type = "reset" 
+								 class = "btn btn-default" value = "Cancel">	
+								<input type = "hidden" value = "<?php echo $_SESSION['user_name'];?>" name = "username">
+							</div>								
+						</div> 
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	
+
+		<script src = "../js/jquery.js"></script>
+		<script src = "../js/bootstrap.min.js"></script>
+	</body>
+
+</html>
+
+<?php
+}else{
+	echo "Page Not found";
+}
+mysqli_close($obj->conndb()); //close connection
+?>
